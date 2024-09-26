@@ -1,15 +1,17 @@
 package main
 
 import (
-	"net/http"
-
+	"Restaurant/database"
 	"github.com/labstack/echo/v4"
+
+	"Restaurant/controller"
 )
 
 func main() {
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
+	database.InitDB("user:password@tcp(127.0.0.1:3306)/restaurant?parseTime=true")
+	apiV1 := e.Group("/api/v1/restaurant")
+	apiV1.GET("/all/menu", controller.GetAllMenu)
+	apiV1.GET("/", controller.Home)
 	e.Logger.Fatal(e.Start(":1323"))
 }
