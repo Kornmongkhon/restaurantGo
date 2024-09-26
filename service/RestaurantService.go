@@ -21,7 +21,7 @@ func HealthyCheck(c echo.Context) error {
 func GetAllMenu(c echo.Context) error {
 	log.Println("MenuService -> GetAllMenu")
 
-	query := "SELECT id, name, description, price FROM menu_items"
+	query := "select id, name, description, price from menu_items where is_available = true"
 	rows, err := database.DB.Query(query)
 	if err != nil {
 		log.Printf("Error executing query: %v", err)
@@ -63,5 +63,23 @@ func GetAllMenu(c echo.Context) error {
 		Code:    enums.Success.GetCode(),
 		Message: enums.Success.String(),
 		Data:    menus,
+	})
+}
+
+func OrderMenu(c echo.Context) error {
+	log.Println("MenuService -> OrderMenu")
+	//query := "insert into orders (table_id, total_amount,create_at ) values (?, ?, ?)"
+	//rows, err := database.DB.Query(query, 1, 1000, "2021-09-01")
+	//if err != nil {
+	//	log.Printf("Error executing query: %v", err)
+	//	return c.JSON(http.StatusInternalServerError, response.CustomResponse{
+	//		Code:    enums.Error.GetCode(),
+	//		Message: enums.Error.String(),
+	//	})
+	//}
+	//defer rows.Close()
+	return c.JSON(http.StatusOK, response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.String(),
 	})
 }

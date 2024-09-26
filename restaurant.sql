@@ -95,8 +95,29 @@ INSERT INTO tables (table_number, is_occupied) VALUES
                                                    (5, FALSE);
 
 -- ข้อมูลตัวอย่างสำหรับตาราง menu_items (ราคาจะเป็นบาท)
+-- เพิ่มเมนูใหม่ 15 รายการ
 INSERT INTO menu_items (name, description, price, is_available) VALUES
-                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta dish with creamy sauce.', 299.00, TRUE),
-                                                                    ('Margherita Pizza', 'Simple yet delicious pizza with fresh mozzarella.', 259.00, TRUE),
-                                                                    ('Caesar Salad', 'Crisp romaine lettuce with Caesar dressing and croutons.', 179.00, TRUE),
-                                                                    ('Tiramisu', 'Delicious coffee-flavored Italian dessert.', 129.00, TRUE);
+                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta with creamy sauce', 150.00, true),
+                                                                    ('Margherita Pizza', 'Traditional pizza with tomato, mozzarella, and basil', 200.00, true),
+                                                                    ('Caesar Salad', 'Crispy romaine lettuce with Caesar dressing', 120.00, true),
+                                                                    ('Grilled Salmon', 'Fresh salmon grilled with herbs and lemon', 350.00, true),
+                                                                    ('Chicken Parmesan', 'Crispy chicken breast with marinara and mozzarella', 250.00, true),
+                                                                    ('Beef Burger', 'Juicy beef patty with cheese and lettuce', 180.00, true),
+                                                                    ('French Fries', 'Golden and crispy fries', 80.00, true),
+                                                                    ('Vegetable Stir Fry', 'Mixed vegetables stir-fried with soy sauce', 140.00, true),
+                                                                    ('Pad Thai', 'Classic Thai stir-fried noodles with shrimp', 150.00, true),
+                                                                    ('Tom Yum Soup', 'Spicy and sour Thai soup with shrimp', 180.00, true),
+                                                                    ('Chicken Tikka Masala', 'Spicy chicken in creamy tomato sauce', 220.00, true),
+                                                                    ('Sushi Platter', 'Assorted sushi with fresh fish and vegetables', 300.00, true),
+                                                                    ('Ramen', 'Japanese noodle soup with pork and egg', 180.00, true),
+                                                                    ('Pancakes', 'Fluffy pancakes with syrup and butter', 100.00, true),
+                                                                    ('Chocolate Cake', 'Rich chocolate cake with fudge icing', 90.00, true);
+
+-- ทำการอัปเดตค่า is_available ให้เป็น false สำหรับ 5 เมนูแบบสุ่ม
+UPDATE menu_items SET is_available = false WHERE name IN (
+                                                          'Caesar Salad',
+                                                          'French Fries',
+                                                          'Sushi Platter',
+                                                          'Tom Yum Soup',
+                                                          'Pancakes'
+    );
