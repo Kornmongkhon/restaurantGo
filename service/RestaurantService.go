@@ -10,8 +10,6 @@ import (
 	"net/http"
 )
 
-var Menu = []model.Menus{}
-
 func HealthyCheck(c echo.Context) error {
 	log.Println("MenuService -> Healthy Check")
 	return c.JSON(http.StatusOK, response.CustomResponse{
