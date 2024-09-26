@@ -96,7 +96,7 @@ INSERT INTO tables (table_number, is_occupied) VALUES
 
 -- ข้อมูลตัวอย่างสำหรับตาราง menu_items (ราคาจะเป็นบาท)
 INSERT INTO menu_items (name, description, price, is_available) VALUES
-                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta dish with creamy sauce. ราคา: 299 บาท', 299.00, TRUE),
-                                                                    ('Margherita Pizza', 'Simple yet delicious pizza with fresh mozzarella. ราคา: 259 บาท', 259.00, TRUE),
-                                                                    ('Caesar Salad', 'Crisp romaine lettuce with Caesar dressing and croutons. ราคา: 179 บาท', 179.00, TRUE),
-                                                                    ('Tiramisu', 'Delicious coffee-flavored Italian dessert. ราคา: 129 บาท', 129.00, TRUE);
+                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta dish with creamy sauce.', 299.00, TRUE),
+                                                                    ('Margherita Pizza', 'Simple yet delicious pizza with fresh mozzarella.', 259.00, TRUE),
+                                                                    ('Caesar Salad', 'Crisp romaine lettuce with Caesar dressing and croutons.', 179.00, TRUE),
+                                                                    ('Tiramisu', 'Delicious coffee-flavored Italian dessert.', 129.00, TRUE);
