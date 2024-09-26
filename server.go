@@ -13,5 +13,6 @@ func main() {
 	apiV1 := e.Group("/api/v1/restaurant")
 	apiV1.GET("/all/menu", controller.GetAllMenu)
 	apiV1.GET("/", controller.Home)
+	apiV1.POST("/order/menu", controller.OrderMenu)
 	e.Logger.Fatal(e.Start(":1323"))
 }

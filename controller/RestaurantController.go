@@ -16,3 +16,9 @@ func GetAllMenu(c echo.Context) error {
 
 	return service.GetAllMenu(c)
 }
+
+func OrderMenu(c echo.Context) error {
+	log.Println("RestController -> OrderMenu")
+
+	return service.OrderMenu(c)
+}
