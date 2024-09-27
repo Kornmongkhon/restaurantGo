@@ -47,8 +47,9 @@ func main() {
 	restaurantService := &service.RestaurantService{RestaurantRepo: restaurantRepo}
 	restaurantController := &controller.RestaurantController{RestaurantService: restaurantService}
 	apiV1 := e.Group("/api/v1/restaurant")
-	apiV1.GET("/all/menu", restaurantController.GetAllMenu)
 	apiV1.GET("/", restaurantController.Home)
+	apiV1.GET("/all/menu", restaurantController.GetAllMenu)
 	apiV1.POST("/order/menu", restaurantController.OrderMenu)
+	apiV1.PATCH("/order/update", restaurantController.UpdateOrder)
 	e.Logger.Fatal(e.Start(":1323"))
 }

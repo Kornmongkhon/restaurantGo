@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS tables;
 
 -- สร้างตาราง tables (โต๊ะ)
 CREATE TABLE tables (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        table_id INT AUTO_INCREMENT PRIMARY KEY,
                         table_number INT UNIQUE NOT NULL,
                         is_deleted BOOLEAN DEFAULT FALSE,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -21,7 +21,7 @@ DROP TABLE IF EXISTS menu_items;
 
 -- สร้างตาราง menu_items (เมนูอาหาร)
 CREATE TABLE menu_items (
-                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            menu_items_id INT AUTO_INCREMENT PRIMARY KEY,
                             name VARCHAR(255) NOT NULL,
                             description TEXT,
                             price DECIMAL(10, 2) NOT NULL,
@@ -35,12 +35,13 @@ DROP TABLE IF EXISTS orders;
 
 -- สร้างตาราง orders (ออเดอร์)
 CREATE TABLE orders (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        order_id INT AUTO_INCREMENT PRIMARY KEY,
                         table_id INT,
                         status ENUM('created', 'prepare', 'canceled', 'completed') DEFAULT 'created',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP NULL DEFAULT NULL,
-                        FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
+                        is_deleted BOOLEAN DEFAULT FALSE,
+                        FOREIGN KEY (table_id) REFERENCES tables(table_id) ON DELETE CASCADE
 );
 
 -- ลบตาราง order_items (รายการออเดอร์) ถ้ามีอยู่
@@ -53,8 +54,8 @@ CREATE TABLE order_items (
                              menu_item_id INT,
                              quantity INT NOT NULL,
                              price DECIMAL(10, 2) NOT NULL,
-                             FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-                             FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+                             FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+                             FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_items_id) ON DELETE CASCADE
 );
 
 -- ลบตาราง bills (บิล) ถ้ามีอยู่
@@ -67,8 +68,8 @@ CREATE TABLE bills (
                        table_id INT,
                        total_amount DECIMAL(10, 2) NOT NULL,
                        bill_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-                       FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
+                       FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+                       FOREIGN KEY (table_id) REFERENCES tables(table_id) ON DELETE CASCADE
 );
 
 -- ลบตาราง reviews (รีวิว) ถ้ามีอยู่
@@ -82,8 +83,8 @@ CREATE TABLE reviews (
                          rating INT CHECK (rating >= 1 AND rating <= 5),
                          comment TEXT,
                          review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
-                         FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+                         FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_items_id) ON DELETE CASCADE,
+                         FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
 );
 
 -- ข้อมูลตัวอย่างสำหรับตาราง tables
