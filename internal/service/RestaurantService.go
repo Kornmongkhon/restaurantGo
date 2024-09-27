@@ -139,6 +139,70 @@ func (s *RestaurantService) OrderMenu(c *request.OrderRequest) (response.CustomR
 		Message: enums.Success.GetMessage(),
 	}, http.StatusOK
 }
+
+func (s *RestaurantService) UpdateOrder(r *request.OrderRequest) (response.CustomResponse, int) {
+	log.Println("RestaurantService -> UpdateOrder")
+	//check input
+	if r.TableId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Table ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	if r.OrderId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Order ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Order ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	if r.Status == "" {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Status must not be empty.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Status must not be empty.",
+		}, http.StatusBadRequest
+	}
+	//find table id
+	existsTableId, err := s.RestaurantRepo.FindTableById(r)
+	if err != nil {
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	if !existsTableId {
+		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: enums.NotFound.GetMessage() + ", Table ID not found.",
+		}, http.StatusNotFound
+	}
+	//find order id
+	existsOrderId, err := s.RestaurantRepo.FindOrderById(r)
+	if err != nil {
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	if !existsOrderId {
+		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Order ID not found.")
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: enums.NotFound.GetMessage() + ", Order ID not found.",
+		}, http.StatusNotFound
+	}
+	err = s.RestaurantRepo.UpdateOrder(r)
+	if err != nil {
+		log.Println("RestaurantService -> Error updating order:", err)
+	}
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
+	}, http.StatusOK
+}
 func joinWithComma(ids []int) string {
 	notFoundItemsStr := make([]string, len(ids))
 	for i, id := range ids {

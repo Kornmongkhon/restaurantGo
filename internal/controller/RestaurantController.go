@@ -42,3 +42,19 @@ func (rc *RestaurantController) OrderMenu(c echo.Context) error {
 	responses, status := rc.RestaurantService.OrderMenu(&orderRequest)
 	return c.JSON(status, responses)
 }
+
+func (rc *RestaurantController) UpdateOrder(c echo.Context) error {
+	log.Println("RestController -> UpdateOrder")
+	var orderRequest request.OrderRequest
+	if err := c.Bind(&orderRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", orderRequest.TableId)
+	log.Println("OrderID :", orderRequest.OrderId)
+	log.Println("Status :", orderRequest.Status)
+	responses, status := rc.RestaurantService.UpdateOrder(&orderRequest)
+	return c.JSON(status, responses)
+}
