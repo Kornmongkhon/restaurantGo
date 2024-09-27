@@ -9,18 +9,23 @@ import (
 	"Restaurant/internal/service"
 	"Restaurant/utils/enums"
 	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
 )
 
 func main() {
 	cfg := config.DBLoadConfig()
+	config.SetTimeZone("Asia/Bangkok")
 	dataSourceName := cfg.DBUser + ":" + cfg.DBPassword + "@tcp(" + cfg.DBHost + ":" + cfg.DBPort + ")/" + cfg.DBName + "?parseTime=true"
 	database.InitDB(dataSourceName)
 	e := echo.New()
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			err := next(c)
+			err := next(c) // เรียก handler ถัดไป
 			if err != nil {
+				// พิมพ์ข้อผิดพลาดที่เกิดขึ้น
+				log.Println("Error occurred: %v", err)
+
 				// ตรวจสอบประเภทของข้อผิดพลาดและสร้าง CustomResponse
 				var customResponse response.CustomResponse
 				switch err.(type) {

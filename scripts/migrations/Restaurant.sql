@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS tables;
 CREATE TABLE tables (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         table_number INT UNIQUE NOT NULL,
-                        is_occupied BOOLEAN DEFAULT FALSE,
+                        is_deleted BOOLEAN DEFAULT FALSE,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -26,6 +26,7 @@ CREATE TABLE menu_items (
                             description TEXT,
                             price DECIMAL(10, 2) NOT NULL,
                             is_available BOOLEAN DEFAULT TRUE,
+                            is_deleted BOOLEAN DEFAULT FALSE,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,7 +39,7 @@ CREATE TABLE orders (
                         table_id INT,
                         status ENUM('created', 'updated', 'canceled', 'completed') DEFAULT 'created',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP NULL DEFAULT NULL,
                         FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
 );
 
@@ -86,7 +87,7 @@ CREATE TABLE reviews (
 );
 
 -- ข้อมูลตัวอย่างสำหรับตาราง tables
-INSERT INTO tables (table_number, is_occupied) VALUES
+INSERT INTO tables (table_number, is_deleted) VALUES
                                                    (1, FALSE),
                                                    (2, FALSE),
                                                    (3, FALSE),
@@ -95,22 +96,22 @@ INSERT INTO tables (table_number, is_occupied) VALUES
 
 -- ข้อมูลตัวอย่างสำหรับตาราง menu_items (ราคาจะเป็นบาท)
 -- เพิ่มเมนูใหม่ 15 รายการ
-INSERT INTO menu_items (name, description, price, is_available) VALUES
-                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta with creamy sauce', 150.00, true),
-                                                                    ('Margherita Pizza', 'Traditional pizza with tomato, mozzarella, and basil', 200.00, true),
-                                                                    ('Caesar Salad', 'Crispy romaine lettuce with Caesar dressing', 120.00, true),
-                                                                    ('Grilled Salmon', 'Fresh salmon grilled with herbs and lemon', 350.00, true),
-                                                                    ('Chicken Parmesan', 'Crispy chicken breast with marinara and mozzarella', 250.00, true),
-                                                                    ('Beef Burger', 'Juicy beef patty with cheese and lettuce', 180.00, true),
-                                                                    ('French Fries', 'Golden and crispy fries', 80.00, true),
-                                                                    ('Vegetable Stir Fry', 'Mixed vegetables stir-fried with soy sauce', 140.00, true),
-                                                                    ('Pad Thai', 'Classic Thai stir-fried noodles with shrimp', 150.00, true),
-                                                                    ('Tom Yum Soup', 'Spicy and sour Thai soup with shrimp', 180.00, true),
-                                                                    ('Chicken Tikka Masala', 'Spicy chicken in creamy tomato sauce', 220.00, true),
-                                                                    ('Sushi Platter', 'Assorted sushi with fresh fish and vegetables', 300.00, true),
-                                                                    ('Ramen', 'Japanese noodle soup with pork and egg', 180.00, true),
-                                                                    ('Pancakes', 'Fluffy pancakes with syrup and butter', 100.00, true),
-                                                                    ('Chocolate Cake', 'Rich chocolate cake with fudge icing', 90.00, true);
+INSERT INTO menu_items (name, description, price, is_available, is_deleted) VALUES
+                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta with creamy sauce', 150.00, true, false),
+                                                                    ('Margherita Pizza', 'Traditional pizza with tomato, mozzarella, and basil', 200.00, true, false),
+                                                                    ('Caesar Salad', 'Crispy romaine lettuce with Caesar dressing', 120.00, true, false),
+                                                                    ('Grilled Salmon', 'Fresh salmon grilled with herbs and lemon', 350.00, true, false),
+                                                                    ('Chicken Parmesan', 'Crispy chicken breast with marinara and mozzarella', 250.00, true, false),
+                                                                    ('Beef Burger', 'Juicy beef patty with cheese and lettuce', 180.00, true, false),
+                                                                    ('French Fries', 'Golden and crispy fries', 80.00, true, false),
+                                                                    ('Vegetable Stir Fry', 'Mixed vegetables stir-fried with soy sauce', 140.00, true, false),
+                                                                    ('Pad Thai', 'Classic Thai stir-fried noodles with shrimp', 150.00, true, false),
+                                                                    ('Tom Yum Soup', 'Spicy and sour Thai soup with shrimp', 180.00, true, false),
+                                                                    ('Chicken Tikka Masala', 'Spicy chicken in creamy tomato sauce', 220.00, true, false),
+                                                                    ('Sushi Platter', 'Assorted sushi with fresh fish and vegetables', 300.00, true, false),
+                                                                    ('Ramen', 'Japanese noodle soup with pork and egg', 180.00, true, false),
+                                                                    ('Pancakes', 'Fluffy pancakes with syrup and butter', 100.00, true, false),
+                                                                    ('Chocolate Cake', 'Rich chocolate cake with fudge icing', 90.00, true, false);
 
 -- ทำการอัปเดตค่า is_available ให้เป็น false สำหรับ 5 เมนูแบบสุ่ม
 UPDATE menu_items SET is_available = false WHERE name IN (
