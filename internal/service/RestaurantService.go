@@ -58,6 +58,16 @@ func (s *RestaurantService) OrderMenu(c *request.OrderRequest) (response.CustomR
 			Message: enums.Invalid.GetMessage() + ", menuItems must not be empty.",
 		}, http.StatusBadRequest
 	}
+	// Check quantity of menu items
+	for _, menuItem := range c.MenuItems {
+		if menuItem.Quantity <= 0 {
+			log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", MenuItem ID " + fmt.Sprint(menuItem.MenuItemID) + ", quantity must be greater than 0.")
+			return response.CustomResponse{
+				Code:    enums.Invalid.GetCode(),
+				Message: enums.Invalid.GetMessage() + ", MenuItem ID " + fmt.Sprint(menuItem.MenuItemID) + ", quantity must be greater than 0.",
+			}, http.StatusBadRequest
+		}
+	}
 	//find table id
 	existsTableId, err := s.RestaurantRepo.FindTableById(c)
 	if err != nil {
