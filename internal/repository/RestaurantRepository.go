@@ -6,6 +6,7 @@ import (
 	"Restaurant/internal/model"
 	"Restaurant/internal/request"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 )
@@ -18,6 +19,7 @@ type RestaurantRepository interface {
 	InsertOrderItems(orderID int64, menuItems []request.MenuItem, tx *sql.Tx) error
 	FindOrderById(r *request.OrderRequest) (bool, error)
 	UpdateOrder(r *request.OrderRequest) error
+	DeleteOrder(r *request.OrderRequest) error
 }
 type MySQLRestaurantRepository struct{}
 
@@ -133,6 +135,22 @@ func (r *MySQLRestaurantRepository) UpdateOrder(ro *request.OrderRequest) error 
 	if currentStatus == "canceled" {
 		deleteQuery := `
 			UPDATE orders
+			SET SET status = ?, is_deleted = TRUE, updated_at = ?
+			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE;
+		`
+		_, err := database.DB.Exec(deleteQuery, ro.Status, currentTime, ro.OrderId, ro.TableId)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *MySQLRestaurantRepository) DeleteOrder(ro *request.OrderRequest) error {
+	if ro.Status == "canceled" {
+		currentTime := config.FormatTime(time.Now())
+		deleteQuery := `
+			UPDATE orders
 			SET is_deleted = TRUE, updated_at = ?
 			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE;
 		`
@@ -140,7 +158,7 @@ func (r *MySQLRestaurantRepository) UpdateOrder(ro *request.OrderRequest) error 
 		if err != nil {
 			return err
 		}
+		return nil
 	}
-
-	return nil
+	return fmt.Errorf("cannot delete order, status is not 'canceled'")
 }
