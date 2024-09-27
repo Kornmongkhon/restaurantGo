@@ -58,3 +58,18 @@ func (rc *RestaurantController) UpdateOrder(c echo.Context) error {
 	responses, status := rc.RestaurantService.UpdateOrder(&orderRequest)
 	return c.JSON(status, responses)
 }
+
+func (rc *RestaurantController) DeleteOrder(c echo.Context) error {
+	log.Println("RestController -> DeleteOrder")
+	var orderRequest request.OrderRequest
+	if err := c.Bind(&orderRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", orderRequest.TableId)
+	log.Println("OrderID :", orderRequest.OrderId)
+	responses, status := rc.RestaurantService.DeleteOrder(&orderRequest)
+	return c.JSON(status, responses)
+}

@@ -51,5 +51,6 @@ func main() {
 	apiV1.GET("/all/menu", restaurantController.GetAllMenu)
 	apiV1.POST("/order/menu", restaurantController.OrderMenu)
 	apiV1.PATCH("/order/update", restaurantController.UpdateOrder)
+	apiV1.DELETE("/order/delete", restaurantController.DeleteOrder)
 	e.Logger.Fatal(e.Start(":1323"))
 }
