@@ -37,7 +37,7 @@ DROP TABLE IF EXISTS orders;
 CREATE TABLE orders (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         table_id INT,
-                        status ENUM('created', 'updated', 'canceled', 'completed') DEFAULT 'created',
+                        status ENUM('created', 'prepare', 'canceled', 'completed') DEFAULT 'created',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP NULL DEFAULT NULL,
                         FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
