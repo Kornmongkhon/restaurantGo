@@ -6,9 +6,10 @@ type StatusCode struct {
 }
 
 var (
-	Success = StatusCode{"S0000", "Success"}
-	Invalid = StatusCode{"I0001", "Invalid request"}
-	Error   = StatusCode{"E9999", "The system has a problem. Please contact the system administrator."}
+	Success  = StatusCode{"S0000", "Success"}
+	Invalid  = StatusCode{"I0001", "Invalid request"}
+	NotFound = StatusCode{"I0004", "Data not found"}
+	Error    = StatusCode{"E9999", "The system has a problem. Please contact the system administrator."}
 )
 
 func (s StatusCode) GetMessage() string {

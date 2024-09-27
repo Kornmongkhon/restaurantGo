@@ -21,8 +21,8 @@ func (rc *RestaurantController) Home(c echo.Context) error {
 
 func (rc *RestaurantController) GetAllMenu(c echo.Context) error {
 	log.Println("RestController -> GetAllMenu")
-	responses := rc.RestaurantService.GetAllMenu()
-	return c.JSON(http.StatusOK, responses)
+	responses, status := rc.RestaurantService.GetAllMenu()
+	return c.JSON(status, responses)
 }
 
 func (rc *RestaurantController) OrderMenu(c echo.Context) error {
@@ -35,7 +35,10 @@ func (rc *RestaurantController) OrderMenu(c echo.Context) error {
 			Message: enums.Invalid.GetMessage(),
 		})
 	}
-	println("TableID : ", orderRequest.TableId)
-	responses := rc.RestaurantService.OrderMenu(&orderRequest)
-	return c.JSON(http.StatusOK, responses)
+	log.Println("TableID :", orderRequest.TableId)
+	for _, menuItem := range orderRequest.MenuItems {
+		log.Println("MenuItemID :", menuItem.MenuItemID, "Quantity :", menuItem.Quantity)
+	}
+	responses, status := rc.RestaurantService.OrderMenu(&orderRequest)
+	return c.JSON(status, responses)
 }
