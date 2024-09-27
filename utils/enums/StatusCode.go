@@ -11,7 +11,7 @@ var (
 	Error   = StatusCode{"E9999", "The system has a problem. Please contact the system administrator."}
 )
 
-func (s StatusCode) String() string {
+func (s StatusCode) GetMessage() string {
 	return s.Message
 }
 
