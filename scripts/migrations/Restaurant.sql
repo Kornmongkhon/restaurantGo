@@ -36,7 +36,6 @@ DROP TABLE IF EXISTS orders;
 CREATE TABLE orders (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         table_id INT,
-                        total_amount DECIMAL(10, 2) DEFAULT 0,
                         status ENUM('created', 'updated', 'canceled', 'completed') DEFAULT 'created',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
