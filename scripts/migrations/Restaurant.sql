@@ -37,7 +37,7 @@ DROP TABLE IF EXISTS orders;
 CREATE TABLE orders (
                         order_id INT AUTO_INCREMENT PRIMARY KEY,
                         table_id INT,
-                        status ENUM('created', 'prepare', 'canceled', 'completed') DEFAULT 'created',
+                        status ENUM('created', 'prepare', 'canceled', 'completed', 'paid') DEFAULT 'created',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP NULL DEFAULT NULL,
                         is_deleted BOOLEAN DEFAULT FALSE,
@@ -78,12 +78,13 @@ DROP TABLE IF EXISTS reviews;
 -- สร้างตาราง reviews (รีวิว)
 CREATE TABLE reviews (
                          id INT AUTO_INCREMENT PRIMARY KEY,
-                         menu_item_id INT,
+#                          menu_item_id INT,
                          order_id INT,
                          rating INT CHECK (rating >= 1 AND rating <= 5),
                          comment TEXT,
+                         is_deleted BOOLEAN DEFAULT FALSE,
                          review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_items_id) ON DELETE CASCADE,
+#                          FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_items_id) ON DELETE CASCADE,
                          FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
 );
 

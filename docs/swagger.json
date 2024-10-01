@@ -1,0 +1,337 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/v1/restaurant/": {
+            "get": {
+                "description": "Check the health status of the server",
+                "summary": "Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restaurant/all/menu": {
+            "get": {
+                "description": "Retrieve a list of all menu items",
+                "tags": [
+                    "restaurant"
+                ],
+                "summary": "Get all menu",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restaurant/order/delete": {
+            "delete": {
+                "description": "Delete the order by its ID and Table ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurant"
+                ],
+                "summary": "Delete order",
+                "parameters": [
+                    {
+                        "description": "Order Request",
+                        "name": "orderRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.OrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restaurant/order/menu": {
+            "post": {
+                "description": "Place an order for menu items",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurant"
+                ],
+                "summary": "Order Menu",
+                "parameters": [
+                    {
+                        "description": "Order Request",
+                        "name": "orderRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.OrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restaurant/order/pay": {
+            "post": {
+                "description": "Process payment for the order by its ID and Table ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurant"
+                ],
+                "summary": "Pay for order",
+                "parameters": [
+                    {
+                        "description": "Order Request",
+                        "name": "orderRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.OrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restaurant/order/review": {
+            "post": {
+                "description": "Add a rating and comment for the specified order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurant"
+                ],
+                "summary": "Submit a review for an order",
+                "parameters": [
+                    {
+                        "description": "Order Request",
+                        "name": "orderRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.OrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restaurant/order/update": {
+            "patch": {
+                "description": "Update the order status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurant"
+                ],
+                "summary": "Update order",
+                "parameters": [
+                    {
+                        "description": "Order Request",
+                        "name": "orderRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.OrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.CustomResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "request.MenuItem": {
+            "type": "object",
+            "required": [
+                "menuItemId",
+                "quantity"
+            ],
+            "properties": {
+                "menuItemId": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "request.OrderRequest": {
+            "type": "object",
+            "required": [
+                "comment",
+                "menuItems",
+                "orderId",
+                "rating",
+                "status",
+                "tableId"
+            ],
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "menuItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.MenuItem"
+                    }
+                },
+                "orderId": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tableId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.CustomResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Status code, e.g., \"S0000\", \"E9999\"",
+                    "type": "string"
+                },
+                "data": {
+                    "description": "Data field, will be omitted if empty"
+                },
+                "message": {
+                    "description": "Message describing the status",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
