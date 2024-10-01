@@ -69,19 +69,9 @@ func (s *RestaurantService) OrderMenu(c *request.OrderRequest) (response.CustomR
 		}
 	}
 	//find table id
-	existsTableId, err := s.RestaurantRepo.FindTableById(c)
+	resp, status, err := s.CheckTableId(c)
 	if err != nil {
-		return response.CustomResponse{
-			Code:    enums.Error.GetCode(),
-			Message: enums.Error.GetMessage(),
-		}, http.StatusInternalServerError
-	}
-	if !existsTableId {
-		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
-		return response.CustomResponse{
-			Code:    enums.NotFound.GetCode(),
-			Message: enums.NotFound.GetMessage() + ", Table ID not found.",
-		}, http.StatusNotFound
+		return resp, status
 	}
 	//find menu id
 	notFoundItems, err := s.RestaurantRepo.FindMenuItemById(c.MenuItems)
@@ -134,6 +124,7 @@ func (s *RestaurantService) OrderMenu(c *request.OrderRequest) (response.CustomR
 			Message: enums.Error.GetMessage(),
 		}, http.StatusInternalServerError
 	}
+	log.Println("Transaction committed successfully")
 	return response.CustomResponse{
 		Code:    enums.Success.GetCode(),
 		Message: enums.Success.GetMessage(),
@@ -165,36 +156,16 @@ func (s *RestaurantService) UpdateOrder(r *request.OrderRequest) (response.Custo
 		}, http.StatusBadRequest
 	}
 	//find table id
-	existsTableId, err := s.RestaurantRepo.FindTableById(r)
+	resp, status, err := s.CheckTableId(r)
 	if err != nil {
-		return response.CustomResponse{
-			Code:    enums.Error.GetCode(),
-			Message: enums.Error.GetMessage(),
-		}, http.StatusInternalServerError
-	}
-	if !existsTableId {
-		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
-		return response.CustomResponse{
-			Code:    enums.NotFound.GetCode(),
-			Message: enums.NotFound.GetMessage() + ", Table ID not found.",
-		}, http.StatusNotFound
+		return resp, status
 	}
 	//find order id
-	existsOrderId, err := s.RestaurantRepo.FindOrderById(r)
+	respOrder, status, err := s.CheckOrderId(r)
 	if err != nil {
-		return response.CustomResponse{
-			Code:    enums.Error.GetCode(),
-			Message: enums.Error.GetMessage(),
-		}, http.StatusInternalServerError
+		return respOrder, status
 	}
-	if !existsOrderId {
-		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Order ID not found.")
-		return response.CustomResponse{
-			Code:    enums.NotFound.GetCode(),
-			Message: enums.NotFound.GetMessage() + ", Order ID not found.",
-		}, http.StatusNotFound
-	}
-	err = s.RestaurantRepo.UpdateOrder(r)
+	err = s.RestaurantRepo.UpdateOrder(r.TableId, r.OrderId, r.Status)
 	if err != nil {
 		log.Println("RestaurantService -> Error updating order:", err)
 	}
@@ -222,34 +193,14 @@ func (s *RestaurantService) DeleteOrder(r *request.OrderRequest) (response.Custo
 		}, http.StatusBadRequest
 	}
 	//find table id
-	existsTableId, err := s.RestaurantRepo.FindTableById(r)
+	resp, status, err := s.CheckTableId(r)
 	if err != nil {
-		return response.CustomResponse{
-			Code:    enums.Error.GetCode(),
-			Message: enums.Error.GetMessage(),
-		}, http.StatusInternalServerError
-	}
-	if !existsTableId {
-		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
-		return response.CustomResponse{
-			Code:    enums.NotFound.GetCode(),
-			Message: enums.NotFound.GetMessage() + ", Table ID not found.",
-		}, http.StatusNotFound
+		return resp, status
 	}
 	//find order id
-	existsOrderId, err := s.RestaurantRepo.FindOrderById(r)
+	respOrder, status, err := s.CheckOrderId(r)
 	if err != nil {
-		return response.CustomResponse{
-			Code:    enums.Error.GetCode(),
-			Message: enums.Error.GetMessage(),
-		}, http.StatusInternalServerError
-	}
-	if !existsOrderId {
-		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Order ID not found.")
-		return response.CustomResponse{
-			Code:    enums.NotFound.GetCode(),
-			Message: enums.NotFound.GetMessage() + ", Order ID not found.",
-		}, http.StatusNotFound
+		return respOrder, status
 	}
 	err = s.RestaurantRepo.DeleteOrder(r)
 	if err != nil {
@@ -260,10 +211,228 @@ func (s *RestaurantService) DeleteOrder(r *request.OrderRequest) (response.Custo
 		Message: enums.Success.GetMessage(),
 	}, http.StatusOK
 }
+
+func (s *RestaurantService) PayOrder(r *request.OrderRequest) (response.CustomResponse, int) {
+	log.Println("RestaurantService -> PayOrder")
+	//check input
+	if r.TableId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Table ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	if r.OrderId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Order ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Order ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	//find table id
+	resp, status, err := s.CheckTableId(r)
+	if err != nil {
+		return resp, status
+	}
+	//find order id
+	respOrder, status, err := s.CheckOrderId(r)
+	if err != nil {
+		return respOrder, status
+	}
+	// Start transaction
+	tx, err := database.DB.Begin()
+	if err != nil {
+		log.Printf("Error starting transaction: %v", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	// Check order status
+	statusOrder, err := s.RestaurantRepo.CheckOrderStatus(r, tx)
+	if err != nil {
+		tx.Rollback()
+		log.Println("RestaurantService -> Error checking order status:", err)
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: "Order not found or already deleted.",
+		}, http.StatusNotFound
+	}
+
+	// Check if status is not "completed"
+	if statusOrder != "completed" {
+		tx.Rollback()
+		log.Println("RestaurantService -> Order is not in 'completed' status")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Order is not completed. Cannot proceed with payment.",
+		}, http.StatusBadRequest
+	}
+	err = s.RestaurantRepo.PayOrder(r, tx)
+	if err != nil {
+		tx.Rollback()
+		log.Println("RestaurantService -> Error paying order:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	err = s.RestaurantRepo.UpdateOrderWithTx(r.TableId, r.OrderId, "paid", tx)
+	if err != nil {
+		tx.Rollback()
+		log.Println("RestaurantService -> Error updating order:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Println("RestaurantService -> Error committing transaction:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	log.Println("Transaction committed successfully")
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
+	}, http.StatusOK
+}
+
+func (s *RestaurantService) ReviewOrder(r *request.OrderRequest) (response.CustomResponse, int) {
+	//check input
+	if r.OrderId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Order ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Order ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	if r.Rating < 1 || r.Rating > 5 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Rating must be between 1 and 5.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Rating must be between 1 and 5.",
+		}, http.StatusBadRequest
+	}
+	//find order id
+	respOrder, status, err := s.CheckOrderId(r)
+	if err != nil {
+		return respOrder, status
+	}
+	// Start transaction
+	tx, err := database.DB.Begin()
+	if err != nil {
+		log.Printf("Error starting transaction: %v", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	// Check order status
+	statusOrder, err := s.RestaurantRepo.CheckOrderStatus(r, tx)
+	if err != nil {
+		tx.Rollback()
+		log.Println("RestaurantService -> Error checking order status:", err)
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: "Order not found or already deleted.",
+		}, http.StatusNotFound
+	}
+
+	// Check if status is not "completed"
+	if statusOrder != "paid" {
+		tx.Rollback()
+		log.Println("RestaurantService -> Order is not in 'paid' status")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Order is not paid. Cannot proceed with payment.",
+		}, http.StatusBadRequest
+	}
+	// Check if the order has already been reviewed
+	hasReviewed, err := s.RestaurantRepo.HasOrderBeenReviewed(r, tx)
+	if err != nil {
+		tx.Rollback()
+		log.Println("RestaurantService -> Error checking if order has been reviewed:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	if hasReviewed {
+		tx.Rollback()
+		log.Println("RestaurantService -> Order has already been reviewed")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Order has already been reviewed.",
+		}, http.StatusBadRequest
+	}
+	err = s.RestaurantRepo.ReviewOrder(r, tx)
+	if err != nil {
+		tx.Rollback()
+		log.Println("RestaurantService -> Error reviewing order:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Println("RestaurantService -> Error committing transaction:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	log.Println("Transaction committed successfully")
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
+	}, http.StatusOK
+}
+
 func joinWithComma(ids []int) string {
 	notFoundItemsStr := make([]string, len(ids))
 	for i, id := range ids {
 		notFoundItemsStr[i] = fmt.Sprint(id)
 	}
 	return strings.Join(notFoundItemsStr, ", ")
+}
+
+func (s *RestaurantService) CheckTableId(r *request.OrderRequest) (response.CustomResponse, int, error) {
+	existsTableId, err := s.RestaurantRepo.FindTableById(r)
+	if err != nil {
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError, err
+	}
+	if !existsTableId {
+		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: enums.NotFound.GetMessage() + ", Table ID " + fmt.Sprint(r.TableId) + " not found.",
+		}, http.StatusNotFound, fmt.Errorf("table id not found")
+	}
+	return response.CustomResponse{}, http.StatusOK, nil
+}
+
+func (s *RestaurantService) CheckOrderId(r *request.OrderRequest) (response.CustomResponse, int, error) {
+	existsOrderId, err := s.RestaurantRepo.FindOrderById(r)
+	if err != nil {
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError, err
+	}
+	if !existsOrderId {
+		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Order ID not found.")
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: enums.NotFound.GetMessage() + ", Order ID " + fmt.Sprint(r.OrderId) + " not found.",
+		}, http.StatusNotFound, fmt.Errorf("order id not found")
+	}
+	return response.CustomResponse{}, http.StatusOK, nil
 }

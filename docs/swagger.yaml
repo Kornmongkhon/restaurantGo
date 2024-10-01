@@ -1,0 +1,221 @@
+definitions:
+  request.MenuItem:
+    properties:
+      menuItemId:
+        type: integer
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - menuItemId
+    - quantity
+    type: object
+  request.OrderRequest:
+    properties:
+      comment:
+        type: string
+      menuItems:
+        items:
+          $ref: '#/definitions/request.MenuItem'
+        type: array
+      orderId:
+        type: integer
+      rating:
+        type: integer
+      status:
+        type: string
+      tableId:
+        type: integer
+    required:
+    - comment
+    - menuItems
+    - orderId
+    - rating
+    - status
+    - tableId
+    type: object
+  response.CustomResponse:
+    properties:
+      code:
+        description: Status code, e.g., "S0000", "E9999"
+        type: string
+      data:
+        description: Data field, will be omitted if empty
+      message:
+        description: Message describing the status
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/restaurant/:
+    get:
+      description: Check the health status of the server
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Health Check
+  /api/v1/restaurant/all/menu:
+    get:
+      description: Retrieve a list of all menu items
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+      summary: Get all menu
+      tags:
+      - restaurant
+  /api/v1/restaurant/order/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete the order by its ID and Table ID
+      parameters:
+      - description: Order Request
+        in: body
+        name: orderRequest
+        required: true
+        schema:
+          $ref: '#/definitions/request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+      summary: Delete order
+      tags:
+      - restaurant
+  /api/v1/restaurant/order/menu:
+    post:
+      consumes:
+      - application/json
+      description: Place an order for menu items
+      parameters:
+      - description: Order Request
+        in: body
+        name: orderRequest
+        required: true
+        schema:
+          $ref: '#/definitions/request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+      summary: Order Menu
+      tags:
+      - restaurant
+  /api/v1/restaurant/order/pay:
+    post:
+      consumes:
+      - application/json
+      description: Process payment for the order by its ID and Table ID
+      parameters:
+      - description: Order Request
+        in: body
+        name: orderRequest
+        required: true
+        schema:
+          $ref: '#/definitions/request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+      summary: Pay for order
+      tags:
+      - restaurant
+  /api/v1/restaurant/order/review:
+    post:
+      consumes:
+      - application/json
+      description: Add a rating and comment for the specified order
+      parameters:
+      - description: Order Request
+        in: body
+        name: orderRequest
+        required: true
+        schema:
+          $ref: '#/definitions/request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+      summary: Submit a review for an order
+      tags:
+      - restaurant
+  /api/v1/restaurant/order/update:
+    patch:
+      consumes:
+      - application/json
+      description: Update the order status
+      parameters:
+      - description: Order Request
+        in: body
+        name: orderRequest
+        required: true
+        schema:
+          $ref: '#/definitions/request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+      summary: Update order
+      tags:
+      - restaurant
+swagger: "2.0"
