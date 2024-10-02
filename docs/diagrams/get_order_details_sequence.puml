@@ -1,0 +1,36 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Get Order Details Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: POST /api/v1/restaurant/order/details
+Controller -> Service: OrderDetails(OrderRequest)
+
+
+Service -> Repository: FindTableById(OrderRequest)
+Repository --> Service: Return Boolean (exists or not)
+
+
+alt Table ID not found
+    Service -> User: Return NotFound (CustomResponse)
+else Table ID exists
+    Service -> Repository: FindOrderById(OrderRequest)
+    Repository --> Service: Return Boolean (exists or not)
+    alt Order ID not found
+        Service -> User : Return NotFound (CustomResponse)
+    else Order ID exists
+        Service -> Repository: GetOrderDetails(OrderRequest)
+        Repository --> Service: Return OrderDetails (Order) / Failure
+
+         alt Order details not found
+            Service -> User: Return InternalServerError (CustomResponse)
+         else Order details found
+            Service -> User : Return Success (CustomResponse with OrderDetails)
+         end
+    end
+end
+
+@enduml

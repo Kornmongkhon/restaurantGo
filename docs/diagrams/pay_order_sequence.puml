@@ -1,0 +1,56 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Pay Order Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: POST /api/v1/restaurant/order/pay
+Controller -> Service: PayOrder(OrderRequest)
+
+Service -> Repository: FindTableById(OrderRequest)
+Repository --> Service: Return Boolean (exists or not)
+
+alt Table ID not found
+    Service -> User: Return NotFound (CustomResponse)
+else Table ID exists
+    Service -> Repository: FindOrderById(OrderRequest)
+    Repository --> Service: Return Boolean (exists or not)
+    alt Order ID not found
+        Service -> User: Return NotFound (CustomResponse)
+    else Order ID exists
+        Service -> Repository: BeginTransaction()
+        Repository --> Service: Transaction
+
+        Service -> Repository: CheckOrderStatus(OrderRequest, tx)
+
+        Repository --> Service: Return OrderStatus
+
+        alt Order status is not "completed"
+            Service -> Repository: RollbackTransaction()
+            Service -> User: Return InvalidStatus (CustomResponse)
+        else Order status is "completed"
+            Service -> Repository: PayOrder(OrderRequest, tx)
+            Repository --> Service: Success/Failure
+
+            alt Bill creation failed
+                Service -> Repository: RollbackTransaction()
+                Service -> User: Return InternalServerError (CustomResponse)
+            else Bill created successfully
+                Service -> Repository: UpdateOrderWithTx(OrderRequest, "paid", tx)
+                Repository --> Service: Success/Failure
+
+                alt Order update failed
+                    Service -> Repository: RollbackTransaction()
+                    Service -> User: Return InternalServerError (CustomResponse)
+                else Order updated successfully
+                    Service -> Repository: CommitTransaction()
+                    Repository --> Service: Commit
+                    Service -> User: Return Success (CustomResponse)
+                end
+            end
+        end
+    end
+end
+@enduml

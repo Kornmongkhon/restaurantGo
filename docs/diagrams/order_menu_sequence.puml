@@ -1,0 +1,47 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Order Menu Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+
+User -> Controller: POST /api/v1/restaurant/order/menu
+Controller -> Service: OrderMenu(OrderRequest)
+
+Service -> Repository: FindTableById(OrderRequest)
+Repository --> Service: Return Boolean (exists or not)
+
+alt Table ID not found
+    Service -> User: Return NotFound (CustomResponse)
+else Table ID exists
+    Service -> Repository: FindMenuItemById(OrderRequest.MenuItems)
+    Repository --> Service: Return List of MenuItems / Failure
+    alt Some Menu Items not found
+        Service -> User: Return NotFound (CustomResponse)
+    else All Menu Items found
+        Service -> Repository: BeginTransaction()
+        Repository --> Service: Transaction
+
+        Service -> Repository: InsertOrder(OrderRequest, tx)
+        Repository --> Service: Return OrderID / Failure
+        alt Inserting order failed
+            Service -> Repository: RollbackTransaction()
+            Service -> User: Return InternalServerError (CustomResponse)
+        else Inserting order successful
+            Service -> Repository: InsertOrderItems(OrderID, OrderRequest.MenuItems, tx)
+            Repository --> Service: Success/Failure
+            alt Inserting order items failed
+                Service -> Repository: RollbackTransaction()
+                Service -> User: Return InternalServerError (CustomResponse)
+            else Inserting order items successful
+                Service -> Repository: CommitTransaction()
+                Repository --> Service: Commit
+                Service -> User: Return Success (CustomResponse)
+            end
+        end
+    end
+end
+
+@enduml

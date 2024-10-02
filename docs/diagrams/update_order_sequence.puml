@@ -1,0 +1,34 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Update Order Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: PATCH /api/v1/restaurant/order/update
+Controller -> Service: UpdateOrder(OrderRequest)
+
+Service -> Repository: FindTableById(OrderRequest)
+Repository --> Service: Return Boolean (exists or not)
+
+alt Table ID not found
+    Service -> User: Return NotFound (CustomResponse)
+else Table ID exists
+    Service -> Repository: FindOrderById(OrderRequest)
+    Repository --> Service: Return Boolean (exists or not)
+    alt Order ID not found
+        Service -> User: Return NotFound (CustomResponse)
+    else Order ID exists
+        Service -> Repository: UpdateOrder(OrderRequest)
+        Repository --> Service: Success/Failure
+
+        alt Update failed
+            Service -> User: Return InternalServerError (CustomResponse)
+        else Update successful
+            Service -> User: Return Success (CustomResponse)
+        end
+    end
+end
+
+@enduml

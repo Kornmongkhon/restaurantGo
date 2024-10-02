@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Delete Order Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+
+User -> Controller: DELETE /api/v1/restaurant/order/delete
+Controller -> Service: DeleteOrder(OrderRequest)
+
+Service -> Repository: FindTableById(OrderRequest)
+Repository --> Service: Return Boolean (exists or not)
+
+alt Table ID not found
+    Service -> User: Return NotFound (CustomResponse)
+else Table ID exists
+    Service -> Repository: FindOrderById(OrderRequest)
+    Repository --> Service: Return Boolean (exists or not)
+    alt Order ID not found
+        Service -> User: Return NotFound (CustomResponse)
+    else Order ID exists
+        Service -> Repository: DeleteOrder(OrderRequest)
+        Repository --> Service: Success/Failure
+
+        alt Deletion failed
+            Service -> User: Return InternalServerError (CustomResponse)
+        else Deletion successful
+            Service -> User: Return Success (CustomResponse)
+        end
+    end
+end
+
+@enduml
