@@ -39,6 +39,8 @@ To run this project, you will need to add the following environment variables to
 
 **Backend:** Golang
 
+**Database:** MySQL
+
 **Tools:** GoLand, DataGrip, Docker Desktop, Postman
 
 
