@@ -167,3 +167,28 @@ func (rc *RestaurantController) ReviewOrder(c echo.Context) error {
 	responses, status := rc.RestaurantService.ReviewOrder(&orderRequest)
 	return c.JSON(status, responses)
 }
+
+// @Summary Get order details by table and order ID
+// @Description Get detailed information about an order, including menu items
+// @Tags Orders
+// @Accept  json
+// @Produce  json
+// @Param order body request.OrderRequest true "Order Request"
+// @Success 200 {object} response.CustomResponse
+// @Failure 400 {object} response.CustomResponse
+// @Failure 500 {object} response.CustomResponse
+// @Router /api/v1/restaurant/order/details [post]
+func (rc *RestaurantController) OrderDetails(c echo.Context) error {
+	log.Println("RestController -> OrderDetails")
+	var orderRequest request.OrderRequest
+	if err := c.Bind(&orderRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", orderRequest.TableId)
+	log.Println("OrderID :", orderRequest.OrderId)
+	responses, status := rc.RestaurantService.OrderDetails(&orderRequest)
+	return c.JSON(status, responses)
+}

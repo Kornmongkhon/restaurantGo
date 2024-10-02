@@ -57,5 +57,6 @@ func main() {
 	apiV1.DELETE("/order/delete", restaurantController.DeleteOrder)
 	apiV1.POST("/order/pay", restaurantController.PayOrder)
 	apiV1.POST("/order/review", restaurantController.ReviewOrder)
+	apiV1.POST("/order/details", restaurantController.OrderDetails)
 	e.Logger.Fatal(e.Start(":1323"))
 }

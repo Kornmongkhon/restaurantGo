@@ -23,8 +23,10 @@ type RestaurantRepository interface {
 	DeleteOrder(r *request.OrderRequest) error
 	PayOrder(r *request.OrderRequest, tx *sql.Tx) error
 	CheckOrderStatus(r *request.OrderRequest, tx *sql.Tx) (string, error)
+	CheckOrderStatusWithOutTx(r *request.OrderRequest) (string, error)
 	HasOrderBeenReviewed(r *request.OrderRequest, tx *sql.Tx) (bool, error)
 	ReviewOrder(r *request.OrderRequest, tx *sql.Tx) error
+	GetOrderDetails(r *request.OrderRequest) (*model.Order, error)
 }
 type MySQLRestaurantRepository struct{}
 
@@ -218,6 +220,23 @@ func (r *MySQLRestaurantRepository) CheckOrderStatus(ro *request.OrderRequest, t
 	return status, nil
 }
 
+func (r *MySQLRestaurantRepository) CheckOrderStatusWithOutTx(ro *request.OrderRequest) (string, error) {
+	checkStatusQuery := `
+		SELECT status FROM orders
+		WHERE order_id = ? AND is_deleted = FALSE
+	`
+
+	var status string
+	err := database.DB.QueryRow(checkStatusQuery, ro.OrderId).Scan(&status)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("order not found or already deleted")
+		}
+		return "", err
+	}
+	return status, nil
+}
+
 func (r *MySQLRestaurantRepository) PayOrder(ro *request.OrderRequest, tx *sql.Tx) error {
 	payQuery := `
 		INSERT INTO bills (order_id, table_id, total_amount, bill_date)
@@ -266,4 +285,41 @@ func (r *MySQLRestaurantRepository) ReviewOrder(ro *request.OrderRequest, tx *sq
 	}
 
 	return nil
+}
+
+func (r *MySQLRestaurantRepository) GetOrderDetails(ro *request.OrderRequest) (*model.Order, error) {
+	query := `
+		SELECT o.order_id, o.table_id, o.status, 
+		       oi.menu_item_id, mi.name, mi.description, oi.quantity, oi.price
+		FROM orders o
+		INNER JOIN order_items oi ON o.order_id = oi.order_id
+		INNER JOIN menu_items mi ON oi.menu_item_id = mi.menu_items_id
+		WHERE o.order_id = ? AND o.is_deleted = FALSE
+	`
+	rows, err := database.DB.Query(query, ro.OrderId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var order model.Order
+	orderMap := make(map[int]*model.Order) // For tracking unique orders
+	for rows.Next() {
+		var orderItem model.OrderItems
+		if err := rows.Scan(&order.OrderId, &order.TableId, &order.Status, &orderItem.MenuItemId, &orderItem.Name,
+			&orderItem.Description, &orderItem.Quantity, &orderItem.Price); err != nil {
+			return nil, err
+		}
+
+		// Check if we already have this order in the map
+		_, exists := orderMap[order.OrderId]
+		if !exists {
+			orderMap[order.OrderId] = &order
+		}
+
+		// Append the order item to the current order
+		orderMap[order.OrderId].OrderItems = append(orderMap[order.OrderId].OrderItems, orderItem)
+	}
+
+	return orderMap[order.OrderId], nil
 }

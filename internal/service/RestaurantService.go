@@ -393,6 +393,48 @@ func (s *RestaurantService) ReviewOrder(r *request.OrderRequest) (response.Custo
 	}, http.StatusOK
 }
 
+func (s *RestaurantService) OrderDetails(r *request.OrderRequest) (response.CustomResponse, int) {
+	log.Println("RestaurantService -> OrderDetails")
+	//check input
+	if r.TableId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Table ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	if r.OrderId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Order ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Order ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	//find table id
+	resp, status, err := s.CheckTableId(r)
+	if err != nil {
+		return resp, status
+	}
+	//find order id
+	respOrder, status, err := s.CheckOrderId(r)
+	if err != nil {
+		return respOrder, status
+	}
+	orderDetails, err := s.RestaurantRepo.GetOrderDetails(r)
+	if err != nil {
+		log.Println("RestaurantService -> Error getting order details:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
+		Data:    orderDetails,
+	}, http.StatusOK
+}
+
 func joinWithComma(ids []int) string {
 	notFoundItemsStr := make([]string, len(ids))
 	for i, id := range ids {
