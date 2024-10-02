@@ -56,6 +56,14 @@ paths:
           description: OK
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
       summary: Health Check
   /api/v1/restaurant/all/menu:
     get:
@@ -63,6 +71,14 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/response.CustomResponse'
       summary: Get all menu
@@ -98,6 +114,36 @@ paths:
       summary: Delete order
       tags:
       - restaurant
+  /api/v1/restaurant/order/details:
+    post:
+      consumes:
+      - application/json
+      description: Get detailed information about an order, including menu items
+      parameters:
+      - description: Order Request
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.CustomResponse'
+      summary: Get order details by table and order ID
+      tags:
+      - Orders
   /api/v1/restaurant/order/menu:
     post:
       consumes:
