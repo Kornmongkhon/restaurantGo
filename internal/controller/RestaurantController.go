@@ -17,6 +17,8 @@ type RestaurantController struct {
 // @Summary Health Check
 // @Description Check the health status of the server
 // @Success 200 {string} string "OK"
+// @Failure 400 {object} response.CustomResponse
+// @Failure 500 {object} response.CustomResponse
 // @Router /api/v1/restaurant/ [get]
 func (rc *RestaurantController) Home(c echo.Context) error {
 	log.Println("RestController -> Healthy Check")
@@ -27,6 +29,8 @@ func (rc *RestaurantController) Home(c echo.Context) error {
 // @Description Retrieve a list of all menu items
 // @Tags restaurant
 // @Success 200 {object} response.CustomResponse
+// @Failure 400 {object} response.CustomResponse
+// @Failure 500 {object} response.CustomResponse
 // @Router /api/v1/restaurant/all/menu [get]
 func (rc *RestaurantController) GetAllMenu(c echo.Context) error {
 	log.Println("RestController -> GetAllMenu")
