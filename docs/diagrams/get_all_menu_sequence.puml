@@ -1,0 +1,20 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Get All Menu Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: GET /api/v1/restaurant/all/menu
+Controller -> Service: GetAllMenu()
+
+Service -> Repository: GetAllMenu()
+Repository -> Service: Return List of Menus / Failure
+
+alt Error fetching menus
+    Service -> User: Return NotFound (CustomResponse)
+else Success fetching menus
+    Service -> User: Return Success (CustomResponse with menus)
+end
+@enduml

@@ -1,0 +1,44 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Review Order Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+participant "CheckOrderId" as CheckOrderId
+participant "HasOrderBeenReviewed" as HasOrderBeenReviewed
+participant "ReviewOrder" as ReviewOrder
+
+User -> Controller: POST /api/v1/restaurant/order/review
+Controller -> Service: ReviewOrder(OrderRequest)
+
+Service -> Repository: FindTableById(OrderRequest)
+Repository --> Service: Return Boolean (exists or not)
+
+alt Order ID not found
+    Service -> User: Return NotFound (CustomResponse)
+else Order ID exists
+    Service -> Repository: CheckOrderStatus(OrderRequest)
+    Repository --> Service: Return OrderStatus
+
+    alt Order status is not "paid"
+        Service -> User: Return InvalidStatus (CustomResponse)
+    else Order status is "paid"
+        Service -> Repository: HasOrderBeenReviewed(OrderRequest)
+        Repository --> Service: Return Boolean (reviewed or not)
+        alt Order already reviewed
+            Service -> User : Return AlreadyReviewed (CustomResponse)
+        else Not reviewed
+            Service -> Repository: ReviewOrder(OrderRequest)
+            Repository --> Service: Success/Failure
+
+            alt Review creation failed
+                Service -> User: Return InternalServerError (CustomResponse)
+            else Review creation succeeded
+                Service -> User: Return Success (CustomResponse)
+            end
+        end
+    end
+end
+
+@enduml
