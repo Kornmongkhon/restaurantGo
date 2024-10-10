@@ -25,6 +25,7 @@ CREATE TABLE menu_items (
                             name VARCHAR(255) NOT NULL,
                             description TEXT,
                             price DECIMAL(10, 2) NOT NULL,
+                            file_path VARCHAR(255),
                             is_available BOOLEAN DEFAULT TRUE,
                             is_deleted BOOLEAN DEFAULT FALSE,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -98,22 +99,22 @@ INSERT INTO tables (table_number, is_deleted) VALUES
 
 -- ข้อมูลตัวอย่างสำหรับตาราง menu_items (ราคาจะเป็นบาท)
 -- เพิ่มเมนูใหม่ 15 รายการ
-INSERT INTO menu_items (name, description, price, is_available, is_deleted) VALUES
-                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta with creamy sauce', 150.00, true, false),
-                                                                    ('Margherita Pizza', 'Traditional pizza with tomato, mozzarella, and basil', 200.00, true, false),
-                                                                    ('Caesar Salad', 'Crispy romaine lettuce with Caesar dressing', 120.00, true, false),
-                                                                    ('Grilled Salmon', 'Fresh salmon grilled with herbs and lemon', 350.00, true, false),
-                                                                    ('Chicken Parmesan', 'Crispy chicken breast with marinara and mozzarella', 250.00, true, false),
-                                                                    ('Beef Burger', 'Juicy beef patty with cheese and lettuce', 180.00, true, false),
-                                                                    ('French Fries', 'Golden and crispy fries', 80.00, true, false),
-                                                                    ('Vegetable Stir Fry', 'Mixed vegetables stir-fried with soy sauce', 140.00, true, false),
-                                                                    ('Pad Thai', 'Classic Thai stir-fried noodles with shrimp', 150.00, true, false),
-                                                                    ('Tom Yum Soup', 'Spicy and sour Thai soup with shrimp', 180.00, true, false),
-                                                                    ('Chicken Tikka Masala', 'Spicy chicken in creamy tomato sauce', 220.00, true, false),
-                                                                    ('Sushi Platter', 'Assorted sushi with fresh fish and vegetables', 300.00, true, false),
-                                                                    ('Ramen', 'Japanese noodle soup with pork and egg', 180.00, true, false),
-                                                                    ('Pancakes', 'Fluffy pancakes with syrup and butter', 100.00, true, false),
-                                                                    ('Chocolate Cake', 'Rich chocolate cake with fudge icing', 90.00, true, false);
+INSERT INTO menu_items (name, description, price, file_path, is_available, is_deleted) VALUES
+                                                                    ('Spaghetti Carbonara', 'Classic Italian pasta with creamy sauce', 150.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Spaghetti Carbonara.jpg',true, false),
+                                                                    ('Margherita Pizza', 'Traditional pizza with tomato, mozzarella, and basil', 200.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Margherita Pizza.jpg', true, false),
+                                                                    ('Caesar Salad', 'Crispy romaine lettuce with Caesar dressing', 120.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Caesar Salad.jpg',true, false),
+                                                                    ('Grilled Salmon', 'Fresh salmon grilled with herbs and lemon', 350.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Grilled Salmon.jpg',true, false),
+                                                                    ('Chicken Parmesan', 'Crispy chicken breast with marinara and mozzarella', 250.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Chicken Parmesan.jpg',true, false),
+                                                                    ('Beef Burger', 'Juicy beef patty with cheese and lettuce', 180.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Beef Burger.jpg',true, false),
+                                                                    ('French Fries', 'Golden and crispy fries', 80.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\French Fries.jpg',true,false),
+                                                                    ('Vegetable Stir Fry', 'Mixed vegetables stir-fried with soy sauce', 140.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Vegetable Stir Fry.jpg',true, false),
+                                                                    ('Pad Thai', 'Classic Thai stir-fried noodles with shrimp', 150.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Pad Thai.jpg',true, false),
+                                                                    ('Tom Yum Soup', 'Spicy and sour Thai soup with shrimp', 180.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Tom Yum Soup.jpg',true, false),
+                                                                    ('Chicken Tikka Masala', 'Spicy chicken in creamy tomato sauce', 220.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Chicken Tikka Masala.jpg',true, false),
+                                                                    ('Sushi Platter', 'Assorted sushi with fresh fish and vegetables', 300.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Sushi Platter.jpg',true, false),
+                                                                    ('Ramen', 'Japanese noodle soup with pork and egg', 180.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Ramen.jpg',true, false),
+                                                                    ('Pancakes', 'Fluffy pancakes with syrup and butter', 100.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Pancakes.jpg',true, false),
+                                                                    ('Chocolate Cake', 'Rich chocolate cake with fudge icing', 90.00, 'K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\Chocolate Cake.jpg',true, false);
 
 -- ทำการอัปเดตค่า is_available ให้เป็น false สำหรับ 5 เมนูแบบสุ่ม
 UPDATE menu_items SET is_available = false WHERE name IN (

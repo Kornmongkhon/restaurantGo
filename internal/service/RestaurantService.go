@@ -6,10 +6,12 @@ import (
 	"Restaurant/internal/request"
 	"Restaurant/internal/response"
 	"Restaurant/utils/enums"
+	"encoding/base64"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -25,6 +27,36 @@ func HealthyCheck(c echo.Context) error {
 	})
 }
 
+func (s *RestaurantService) FindTable(r *request.TableRequest) (response.CustomResponse, int) {
+	log.Println("RestaurantService -> FindTable")
+	if r.TableId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Table ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	exists, err := s.RestaurantRepo.FindTableByTableRequestId(r)
+	if err != nil {
+		log.Printf("Service error fetching table: %v", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	if !exists {
+		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: enums.NotFound.GetMessage() + ", Table ID " + fmt.Sprint(r.TableId) + " not found.",
+		}, http.StatusNotFound
+	}
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
+	}, http.StatusOK
+}
+
 func (s *RestaurantService) GetAllMenu() (response.CustomResponse, int) {
 	log.Println("RestaurantService -> GetAllMenu")
 	menus, err := s.RestaurantRepo.GetAllMenu()
@@ -34,6 +66,20 @@ func (s *RestaurantService) GetAllMenu() (response.CustomResponse, int) {
 			Code:    enums.NotFound.GetCode(),
 			Message: enums.NotFound.GetMessage(),
 		}, http.StatusNotFound
+	}
+	for i, menu := range menus {
+		for j, fileObject := range menu.FileObjects {
+			filePath := fmt.Sprintf("K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\%s", fileObject.FileName)
+			base64Content, err := s.convertFileToBase64(filePath)
+			if err != nil {
+				log.Printf("Error converting file to base64: %v", err)
+				return response.CustomResponse{
+					Code:    enums.Error.GetCode(),
+					Message: enums.Error.GetMessage(),
+				}, http.StatusInternalServerError
+			}
+			menus[i].FileObjects[j].Base64 = base64Content
+		}
 	}
 	return response.CustomResponse{
 		Code:    enums.Success.GetCode(),
@@ -435,6 +481,36 @@ func (s *RestaurantService) OrderDetails(r *request.OrderRequest) (response.Cust
 	}, http.StatusOK
 }
 
+func (s *RestaurantService) OrderHistory(r *request.OrderRequest) (response.CustomResponse, int) {
+	log.Println("RestaurantService -> OrderHistory")
+	//check input
+	if r.TableId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Table ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	//find table id
+	resp, status, err := s.CheckTableId(r)
+	if err != nil {
+		return resp, status
+	}
+	orders, err := s.RestaurantRepo.GetOrderHistory(r)
+	if err != nil {
+		log.Println("RestaurantService -> Error getting order history:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
+		Data:    orders,
+	}, http.StatusOK
+}
+
 func joinWithComma(ids []int) string {
 	notFoundItemsStr := make([]string, len(ids))
 	for i, id := range ids {
@@ -477,4 +553,14 @@ func (s *RestaurantService) CheckOrderId(r *request.OrderRequest) (response.Cust
 		}, http.StatusNotFound, fmt.Errorf("order id not found")
 	}
 	return response.CustomResponse{}, http.StatusOK, nil
+}
+func (s *RestaurantService) convertFileToBase64(filePath string) (string, error) {
+	fmt.Printf("Attempting to read file at: %s\n", filePath) // Debug print
+	data, err := os.ReadFile(filePath)                       // Read the file
+	if err != nil {
+		return "", err
+	}
+	base64Content := base64.StdEncoding.EncodeToString(data)
+	mimeType := http.DetectContentType(data)
+	return "data:" + mimeType + ";base64," + base64Content, nil
 }

@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:mysql://localhost:3306/restaurant</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="prior_carbon_footprint@db-postgres.priorsolution.co.th" uuid="3127d69e-b97c-4da1-a43c-c77a075da604">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://db-postgres.priorsolution.co.th:2492/prior_carbon_footprint</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

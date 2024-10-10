@@ -25,6 +25,30 @@ func (rc *RestaurantController) Home(c echo.Context) error {
 	return service.HealthyCheck(c)
 }
 
+// @Summary Find Table
+// @Description Find a table by its ID
+// @Tags restaurant
+// @Accept json
+// @Produce json
+// @Param table body request.TableRequest true "Table Request"
+// @Success 200 {object} response.CustomResponse
+// @Failure 400 {object} response.CustomResponse
+// @Failure 500 {object} response.CustomResponse
+// @Router /api/v1/restaurant/table [post]
+func (rc *RestaurantController) FindTable(c echo.Context) error {
+	log.Println("RestController -> FindTable")
+	var tableRequest request.TableRequest
+	if err := c.Bind(&tableRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", tableRequest.TableId)
+	responses, status := rc.RestaurantService.FindTable(&tableRequest)
+	return c.JSON(status, responses)
+}
+
 // @Summary Get all menu
 // @Description Retrieve a list of all menu items
 // @Tags restaurant
@@ -190,5 +214,19 @@ func (rc *RestaurantController) OrderDetails(c echo.Context) error {
 	log.Println("TableID :", orderRequest.TableId)
 	log.Println("OrderID :", orderRequest.OrderId)
 	responses, status := rc.RestaurantService.OrderDetails(&orderRequest)
+	return c.JSON(status, responses)
+}
+
+func (rc *RestaurantController) OrderHistory(c echo.Context) error {
+	log.Println("RestController -> OrderHistory")
+	var orderRequest request.OrderRequest
+	if err := c.Bind(&orderRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", orderRequest.TableId)
+	responses, status := rc.RestaurantService.OrderHistory(&orderRequest)
 	return c.JSON(status, responses)
 }
