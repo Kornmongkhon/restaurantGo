@@ -8,12 +8,14 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 )
 
 type RestaurantRepository interface {
 	GetAllMenu() ([]model.Menus, error)
 	FindTableById(c *request.OrderRequest) (bool, error)
+	FindTableByTableRequestId(c *request.TableRequest) (bool, error)
 	FindMenuItemById(c []request.MenuItem) ([]int, error)
 	InsertOrder(c *request.OrderRequest, tx *sql.Tx) (int64, error)
 	InsertOrderItems(orderID int64, menuItems []request.MenuItem, tx *sql.Tx) error
@@ -27,11 +29,12 @@ type RestaurantRepository interface {
 	HasOrderBeenReviewed(r *request.OrderRequest, tx *sql.Tx) (bool, error)
 	ReviewOrder(r *request.OrderRequest, tx *sql.Tx) error
 	GetOrderDetails(r *request.OrderRequest) (*model.Order, error)
+	GetOrderHistory(r *request.OrderRequest) ([]model.ViewOrder, error)
 }
 type MySQLRestaurantRepository struct{}
 
 func (r *MySQLRestaurantRepository) GetAllMenu() ([]model.Menus, error) {
-	query := "SELECT menu_items_id, name, description, price FROM menu_items WHERE is_available = true"
+	query := "SELECT menu_items_id, name, description, price, file_path, is_available FROM menu_items WHERE is_deleted = false"
 	rows, err := database.DB.Query(query)
 	if err != nil {
 		log.Printf("Error fetching menus from database: %v", err)
@@ -42,9 +45,14 @@ func (r *MySQLRestaurantRepository) GetAllMenu() ([]model.Menus, error) {
 	var menus []model.Menus
 	for rows.Next() {
 		var menu model.Menus
-		if err := rows.Scan(&menu.MenuItemsId, &menu.Name, &menu.Description, &menu.Price); err != nil {
+		var filePath string
+		if err := rows.Scan(&menu.MenuItemsId, &menu.Name, &menu.Description, &menu.Price, &filePath, &menu.IsAvailable); err != nil {
 			log.Printf("Error scanning menu: %v", err)
 			return nil, err
+		}
+		filePath = strings.TrimPrefix(filePath, "K:\\IdeaProjects\\GoLand\\26Sep\\Restaurant\\assets\\images\\")
+		menu.FileObjects = []model.FileObject{
+			{FileName: filePath}, // Add the trimmed file path
 		}
 		menus = append(menus, menu)
 	}
@@ -53,6 +61,17 @@ func (r *MySQLRestaurantRepository) GetAllMenu() ([]model.Menus, error) {
 }
 
 func (r *MySQLRestaurantRepository) FindTableById(c *request.OrderRequest) (bool, error) {
+	query := "SELECT count(1) FROM tables WHERE table_id = ? AND is_deleted = FALSE"
+	var count int
+	err := database.DB.QueryRow(query, c.TableId).Scan(&count)
+	if count > 0 {
+		return true, nil
+	}
+
+	return false, err
+}
+
+func (r *MySQLRestaurantRepository) FindTableByTableRequestId(c *request.TableRequest) (bool, error) {
 	query := "SELECT count(1) FROM tables WHERE table_id = ? AND is_deleted = FALSE"
 	var count int
 	err := database.DB.QueryRow(query, c.TableId).Scan(&count)
@@ -322,4 +341,29 @@ func (r *MySQLRestaurantRepository) GetOrderDetails(ro *request.OrderRequest) (*
 	}
 
 	return orderMap[order.OrderId], nil
+}
+
+func (r *MySQLRestaurantRepository) GetOrderHistory(ro *request.OrderRequest) ([]model.ViewOrder, error) {
+	query := `
+		SELECT o.order_id, o.table_id, o.status, created_at
+		FROM orders o
+		WHERE o.table_id = ?
+  		AND o.is_deleted = FALSE
+	`
+	rows, err := database.DB.Query(query, ro.TableId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []model.ViewOrder
+	for rows.Next() {
+		var order model.ViewOrder
+		if err := rows.Scan(&order.OrderId, &order.TableId, &order.Status, &order.CreatedAt); err != nil {
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+
+	return orders, nil
 }
