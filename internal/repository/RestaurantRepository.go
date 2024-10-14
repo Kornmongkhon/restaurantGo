@@ -15,7 +15,7 @@ import (
 type RestaurantRepository interface {
 	GetAllMenu() ([]model.Menus, error)
 	FindTableById(c *request.OrderRequest) (bool, error)
-	FindTableByTableRequestId(c *request.TableRequest) (bool, error)
+	FindTableByTableRequestId(c *request.TableRequest) (bool, string, error)
 	FindMenuItemById(c []request.MenuItem) ([]int, error)
 	InsertOrder(c *request.OrderRequest, tx *sql.Tx) (int64, error)
 	InsertOrderItems(orderID int64, menuItems []request.MenuItem, tx *sql.Tx) error
@@ -30,6 +30,8 @@ type RestaurantRepository interface {
 	ReviewOrder(r *request.OrderRequest, tx *sql.Tx) error
 	GetOrderDetails(r *request.OrderRequest) (*model.Order, error)
 	GetOrderHistory(r *request.OrderRequest) ([]model.ViewOrder, error)
+	UpdateTable(r *request.TableRequest) error
+	DeleteAllOrderWhenCheckOut(r *request.TableRequest) error
 }
 type MySQLRestaurantRepository struct{}
 
@@ -71,15 +73,34 @@ func (r *MySQLRestaurantRepository) FindTableById(c *request.OrderRequest) (bool
 	return false, err
 }
 
-func (r *MySQLRestaurantRepository) FindTableByTableRequestId(c *request.TableRequest) (bool, error) {
-	query := "SELECT count(1) FROM tables WHERE table_id = ? AND is_deleted = FALSE"
+func (r *MySQLRestaurantRepository) FindTableByTableRequestId(c *request.TableRequest) (bool, string, error) {
+	query := "SELECT count(1), table_status FROM tables WHERE table_id = ? AND is_deleted = FALSE GROUP BY table_status "
 	var count int
-	err := database.DB.QueryRow(query, c.TableId).Scan(&count)
+	var tableStatus string
+	err := database.DB.QueryRow(query, c.TableId).Scan(&count, &tableStatus)
+	if err != nil {
+		return false, "", err
+	}
 	if count > 0 {
-		return true, nil
+		return true, tableStatus, nil
 	}
 
-	return false, err
+	return false, "", err
+}
+
+func (r *MySQLRestaurantRepository) UpdateTable(ro *request.TableRequest) error {
+	updateQuery := `
+		UPDATE tables
+		SET table_status = ?, updated_at = ?
+		WHERE table_id = ? AND is_deleted = FALSE
+	`
+	currentTime := config.FormatTime(time.Now())
+	_, err := database.DB.Exec(updateQuery, ro.TableStatus, currentTime, ro.TableId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *MySQLRestaurantRepository) FindMenuItemById(c []request.MenuItem) ([]int, error) {
@@ -220,6 +241,20 @@ func (r *MySQLRestaurantRepository) DeleteOrder(ro *request.OrderRequest) error 
 		return nil
 	}
 	return fmt.Errorf("cannot delete order, status is not 'canceled'")
+}
+
+func (r *MySQLRestaurantRepository) DeleteAllOrderWhenCheckOut(ro *request.TableRequest) error {
+	currentTime := config.FormatTime(time.Now())
+	deleteQuery := `
+		UPDATE orders
+		SET is_deleted = TRUE, updated_at = ?
+		WHERE table_id = ? AND is_deleted = FALSE;
+	`
+	_, err := database.DB.Exec(deleteQuery, currentTime, ro.TableId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *MySQLRestaurantRepository) CheckOrderStatus(ro *request.OrderRequest, tx *sql.Tx) (string, error) {
