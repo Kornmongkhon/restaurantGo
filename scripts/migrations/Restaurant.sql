@@ -12,8 +12,10 @@ DROP TABLE IF EXISTS tables;
 CREATE TABLE tables (
                         table_id INT AUTO_INCREMENT PRIMARY KEY,
                         table_number INT UNIQUE NOT NULL,
+                        table_status ENUM('available', 'occupied') DEFAULT 'available',
                         is_deleted BOOLEAN DEFAULT FALSE,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP NULL DEFAULT NULL
 );
 
 -- ลบตาราง menu_items (เมนูอาหาร) ถ้ามีอยู่

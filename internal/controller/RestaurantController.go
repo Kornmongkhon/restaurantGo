@@ -230,3 +230,32 @@ func (rc *RestaurantController) OrderHistory(c echo.Context) error {
 	responses, status := rc.RestaurantService.OrderHistory(&orderRequest)
 	return c.JSON(status, responses)
 }
+
+func (rc *RestaurantController) UpdateTable(c echo.Context) error {
+	log.Println("RestController -> UpdateTable")
+	var tableRequest request.TableRequest
+	if err := c.Bind(&tableRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", tableRequest.TableId)
+	log.Println("Status :", tableRequest.TableStatus)
+	responses, status := rc.RestaurantService.UpdateTable(&tableRequest)
+	return c.JSON(status, responses)
+}
+
+func (rc *RestaurantController) DeleteAllOrderWhenCheckOut(c echo.Context) error {
+	log.Println("RestController -> DeleteAllOrderWhenCheckOut")
+	var tableRequest request.TableRequest
+	if err := c.Bind(&tableRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", tableRequest.TableId)
+	responses, status := rc.RestaurantService.DeleteAllOrderWhenCheckOut(&tableRequest)
+	return c.JSON(status, responses)
+}
