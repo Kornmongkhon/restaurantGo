@@ -31,7 +31,9 @@ type RestaurantRepository interface {
 	GetOrderDetails(r *request.OrderRequest) (*model.Order, error)
 	GetOrderHistory(r *request.OrderRequest) ([]model.ViewOrder, error)
 	UpdateTable(r *request.TableRequest) error
-	DeleteAllOrderWhenCheckOut(r *request.TableRequest) error
+	DeleteAllOrderWhenCheckOut(r *request.TableRequest, checkinId int) error
+	CheckIn(r *request.TableRequest) (int64, error)
+	CheckOut(r *request.TableRequest) error
 }
 type MySQLRestaurantRepository struct{}
 
@@ -150,7 +152,7 @@ func (r *MySQLRestaurantRepository) InsertOrderItems(orderID int64, menuItems []
 }
 
 func (r *MySQLRestaurantRepository) FindOrderById(ro *request.OrderRequest) (bool, error) {
-	query := "SELECT count(1) FROM orders WHERE order_id = ? AND is_deleted = FALSE AND status NOT IN ('canceled')"
+	query := "SELECT count(1) FROM orders WHERE order_id = ? AND is_deleted = FALSE AND status NOT IN ('canceled') AND is_checkout = FALSE"
 	var count int
 	err := database.DB.QueryRow(query, ro.OrderId).Scan(&count)
 	if count > 0 {
@@ -166,7 +168,7 @@ func (r *MySQLRestaurantRepository) UpdateOrder(tableId int, orderId int, status
 	updateQuery := `
 			UPDATE orders
 			SET status = ?, updated_at = ?
-			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE;
+			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE AND is_checkout = FALSE
 		`
 	_, err := database.DB.Exec(updateQuery, status, currentTime, orderId, tableId)
 	if err != nil {
@@ -183,7 +185,7 @@ func (r *MySQLRestaurantRepository) UpdateOrder(tableId int, orderId int, status
 		deleteQuery := `
 			UPDATE orders
 			SET status = ?, is_deleted = TRUE, updated_at = ?
-			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE;
+			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE
 		`
 		_, err := database.DB.Exec(deleteQuery, status, currentTime, orderId, tableId)
 		if err != nil {
@@ -199,7 +201,7 @@ func (r *MySQLRestaurantRepository) UpdateOrderWithTx(tableId int, orderId int, 
 	updateQuery := `
 			UPDATE orders
 			SET status = ?, updated_at = ?
-			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE;
+			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE
 		`
 	_, err := tx.Exec(updateQuery, status, currentTime, orderId, tableId)
 	if err != nil {
@@ -216,7 +218,7 @@ func (r *MySQLRestaurantRepository) UpdateOrderWithTx(tableId int, orderId int, 
 		deleteQuery := `
 			UPDATE orders
 			SET status = ?, is_deleted = TRUE, updated_at = ?
-			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE;
+			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE
 		`
 		_, err := tx.Exec(deleteQuery, status, currentTime, orderId, tableId)
 		if err != nil {
@@ -232,7 +234,7 @@ func (r *MySQLRestaurantRepository) DeleteOrder(ro *request.OrderRequest) error 
 		deleteQuery := `
 			UPDATE orders
 			SET is_deleted = TRUE, updated_at = ?, status = ?
-			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE;
+			WHERE order_id = ? AND table_id = ? AND is_deleted = FALSE
 		`
 		_, err := database.DB.Exec(deleteQuery, currentTime, ro.Status, ro.OrderId, ro.TableId)
 		if err != nil {
@@ -243,14 +245,19 @@ func (r *MySQLRestaurantRepository) DeleteOrder(ro *request.OrderRequest) error 
 	return fmt.Errorf("cannot delete order, status is not 'canceled'")
 }
 
-func (r *MySQLRestaurantRepository) DeleteAllOrderWhenCheckOut(ro *request.TableRequest) error {
+func (r *MySQLRestaurantRepository) DeleteAllOrderWhenCheckOut(ro *request.TableRequest, checkinId int) error {
 	currentTime := config.FormatTime(time.Now())
 	deleteQuery := `
-		UPDATE orders
-		SET is_deleted = TRUE, updated_at = ?
-		WHERE table_id = ? AND is_deleted = FALSE;
+		UPDATE orders o
+		JOIN table_usage tu ON o.table_id = tu.table_id
+		SET o.is_checkout = TRUE, o.updated_at = ?
+		WHERE o.table_id = ?
+		AND tu.id = ?  -- ใช้ checkin_id ในการกรอง
+		AND o.is_deleted = FALSE 
+		AND o.is_checkout = FALSE
+		AND o.created_at BETWEEN tu.checkin_time AND IFNULL(tu.checkout_time, ?)
 	`
-	_, err := database.DB.Exec(deleteQuery, currentTime, ro.TableId)
+	_, err := database.DB.Exec(deleteQuery, currentTime, ro.TableId, checkinId, currentTime)
 	if err != nil {
 		return err
 	}
@@ -260,7 +267,7 @@ func (r *MySQLRestaurantRepository) DeleteAllOrderWhenCheckOut(ro *request.Table
 func (r *MySQLRestaurantRepository) CheckOrderStatus(ro *request.OrderRequest, tx *sql.Tx) (string, error) {
 	checkStatusQuery := `
 		SELECT status FROM orders
-		WHERE order_id = ? AND is_deleted = FALSE
+		WHERE order_id = ? AND is_deleted = FALSE AND is_checkout = FALSE
 	`
 
 	var status string
@@ -348,7 +355,7 @@ func (r *MySQLRestaurantRepository) GetOrderDetails(ro *request.OrderRequest) (*
 		FROM orders o
 		INNER JOIN order_items oi ON o.order_id = oi.order_id
 		INNER JOIN menu_items mi ON oi.menu_item_id = mi.menu_items_id
-		WHERE o.order_id = ? AND o.is_deleted = FALSE
+		WHERE o.order_id = ? AND o.is_deleted = FALSE AND o.is_checkout = FALSE
 	`
 	rows, err := database.DB.Query(query, ro.OrderId)
 	if err != nil {
@@ -384,6 +391,7 @@ func (r *MySQLRestaurantRepository) GetOrderHistory(ro *request.OrderRequest) ([
 		FROM orders o
 		WHERE o.table_id = ?
   		AND o.is_deleted = FALSE
+		AND o.is_checkout = FALSE
 	`
 	rows, err := database.DB.Query(query, ro.TableId)
 	if err != nil {
@@ -401,4 +409,40 @@ func (r *MySQLRestaurantRepository) GetOrderHistory(ro *request.OrderRequest) ([
 	}
 
 	return orders, nil
+}
+
+func (r *MySQLRestaurantRepository) CheckIn(ro *request.TableRequest) (int64, error) {
+	checkInQuery := `
+		INSERT INTO table_usage (table_id, checkin_time)
+		VALUES (?, ?)
+	`
+	currentTime := config.FormatTime(time.Now())
+
+	// Execute the query and get result
+	result, err := database.DB.Exec(checkInQuery, ro.TableId, currentTime)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the last inserted ID (checkin_id)
+	checkinId, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return checkinId, nil
+}
+
+func (r *MySQLRestaurantRepository) CheckOut(ro *request.TableRequest) error {
+	checkOutQuery := `
+		UPDATE table_usage
+		SET checkout_time = ?
+		WHERE table_id = ? AND checkout_time IS NULL AND is_deleted = FALSE
+	`
+	currentTime := config.FormatTime(time.Now())
+	_, err := database.DB.Exec(checkOutQuery, currentTime, ro.TableId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

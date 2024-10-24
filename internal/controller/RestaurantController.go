@@ -256,6 +256,35 @@ func (rc *RestaurantController) DeleteAllOrderWhenCheckOut(c echo.Context) error
 		})
 	}
 	log.Println("TableID :", tableRequest.TableId)
+	log.Println("CheckinID :", tableRequest.CheckinId)
 	responses, status := rc.RestaurantService.DeleteAllOrderWhenCheckOut(&tableRequest)
+	return c.JSON(status, responses)
+}
+
+func (rc *RestaurantController) CheckIn(c echo.Context) error {
+	log.Println("RestController -> CheckIn")
+	var tableRequest request.TableRequest
+	if err := c.Bind(&tableRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", tableRequest.TableId)
+	responses, status := rc.RestaurantService.CheckIn(&tableRequest)
+	return c.JSON(status, responses)
+}
+
+func (rc *RestaurantController) CheckOut(c echo.Context) error {
+	log.Println("RestController -> CheckOut")
+	var tableRequest request.TableRequest
+	if err := c.Bind(&tableRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage(),
+		})
+	}
+	log.Println("TableID :", tableRequest.TableId)
+	responses, status := rc.RestaurantService.CheckOut(&tableRequest)
 	return c.JSON(status, responses)
 }

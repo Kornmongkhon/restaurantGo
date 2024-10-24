@@ -320,6 +320,14 @@ func (s *RestaurantService) DeleteAllOrderWhenCheckOut(r *request.TableRequest) 
 			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
 		}, http.StatusBadRequest
 	}
+	//check checkin id
+	if r.CheckinId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Checkin ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Checkin ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
 	//find table id
 	exists, _, err := s.RestaurantRepo.FindTableByTableRequestId(r)
 	if err != nil {
@@ -336,7 +344,7 @@ func (s *RestaurantService) DeleteAllOrderWhenCheckOut(r *request.TableRequest) 
 			Message: enums.NotFound.GetMessage() + ", Table ID " + fmt.Sprint(r.TableId) + " not found.",
 		}, http.StatusNotFound
 	}
-	err = s.RestaurantRepo.DeleteAllOrderWhenCheckOut(r)
+	err = s.RestaurantRepo.DeleteAllOrderWhenCheckOut(r, r.CheckinId)
 	if err != nil {
 		log.Println("RestaurantService -> Error deleting all orders:", err)
 	}
@@ -596,6 +604,90 @@ func (s *RestaurantService) OrderHistory(r *request.OrderRequest) (response.Cust
 		Code:    enums.Success.GetCode(),
 		Message: enums.Success.GetMessage(),
 		Data:    orders,
+	}, http.StatusOK
+}
+
+func (s *RestaurantService) CheckIn(r *request.TableRequest) (response.CustomResponse, int) {
+	log.Println("RestaurantService -> CheckIn")
+	//check input
+	if r.TableId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Table ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	//find table id
+	exists, _, err := s.RestaurantRepo.FindTableByTableRequestId(r)
+	if err != nil {
+		log.Printf("Service error fetching table: %v", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	if !exists {
+		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: enums.NotFound.GetMessage() + ", Table ID " + fmt.Sprint(r.TableId) + " not found.",
+		}, http.StatusNotFound
+	}
+	checkinId, err := s.RestaurantRepo.CheckIn(r)
+	log.Println("Checkin ID: ", checkinId)
+	if err != nil {
+		log.Println("RestaurantService -> Error checking in:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
+		Data: map[string]interface{}{
+			"checkinId": checkinId, // Include checkin_id in the response
+		},
+	}, http.StatusOK
+}
+
+func (s *RestaurantService) CheckOut(r *request.TableRequest) (response.CustomResponse, int) {
+	log.Println("RestaurantService -> CheckOut")
+	//check input
+	if r.TableId <= 0 {
+		log.Println("RestaurantService -> " + enums.Invalid.GetMessage() + ", Table ID must be greater than 0.")
+		return response.CustomResponse{
+			Code:    enums.Invalid.GetCode(),
+			Message: enums.Invalid.GetMessage() + ", Table ID must be greater than 0.",
+		}, http.StatusBadRequest
+	}
+	//find table id
+	exists, _, err := s.RestaurantRepo.FindTableByTableRequestId(r)
+	if err != nil {
+		log.Printf("Service error fetching table: %v", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	if !exists {
+		log.Println("RestaurantService -> " + enums.NotFound.GetMessage() + ", Table ID not found.")
+		return response.CustomResponse{
+			Code:    enums.NotFound.GetCode(),
+			Message: enums.NotFound.GetMessage() + ", Table ID " + fmt.Sprint(r.TableId) + " not found.",
+		}, http.StatusNotFound
+	}
+	err = s.RestaurantRepo.CheckOut(r)
+	if err != nil {
+		log.Println("RestaurantService -> Error checking out:", err)
+		return response.CustomResponse{
+			Code:    enums.Error.GetCode(),
+			Message: enums.Error.GetMessage(),
+		}, http.StatusInternalServerError
+	}
+	return response.CustomResponse{
+		Code:    enums.Success.GetCode(),
+		Message: enums.Success.GetMessage(),
 	}, http.StatusOK
 }
 

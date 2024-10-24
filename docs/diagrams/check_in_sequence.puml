@@ -1,0 +1,19 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+title Check In Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: POST /api/v1/restaurant/checkin
+Controller -> Service: CheckIn()
+Service -> Repository: CheckIn()
+Repository -> Service: Return CheckinID / Failure
+alt Error checking in
+    Service -> User: Return NotFound (CustomResponse)
+else Success checking in
+    Service -> User: Return Success
+end
+@enduml
