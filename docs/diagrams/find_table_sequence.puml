@@ -1,0 +1,19 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Find Table Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: POST /api/v1/restaurant/table
+Controller -> Service: FindTable()
+
+Service -> Repository: FindTableByTableRequestId()
+Repository -> Service: Return Table / Failure
+alt Error finding table
+    Service -> User: Return NotFound (CustomResponse)
+else Success finding table
+    Service -> User: Return Success (CustomResponse with table)
+end
+@enduml

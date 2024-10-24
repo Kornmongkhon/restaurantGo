@@ -1,0 +1,21 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+title Get Order History Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: POST /api/v1/restaurant/order/history
+Controller -> Service: GetOrderHistory()
+
+Service -> Repository: GetOrderHistory()
+Repository -> Service: Return List of Orders / Failure
+
+alt Error fetching order history
+    Service -> User: Return NotFound (CustomResponse)
+else Success fetching order history
+    Service -> User: Return Success (CustomResponse with order list)
+end
+@enduml

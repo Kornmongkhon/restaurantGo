@@ -1,0 +1,20 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Delete All Order When Checkout Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: DELETE /api/v1/restaurant/order/delete/all
+Controller -> Service: DeleteAllOrderWhenCheckout()
+
+Service -> Repository: DeleteAllOrderWhenCheckout()
+Repository -> Service: Return Success / Failure
+
+alt Error deleting all orders
+    Service -> User: Return NotFound (CustomResponse)
+else Success deleting all orders
+    Service -> User: Return Success
+end
+@enduml

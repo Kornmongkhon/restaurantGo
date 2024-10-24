@@ -1,0 +1,20 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title Update Table Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: PATCH /api/v1/restaurant/table/update
+Controller -> Service: UpdateTable()
+
+Service -> Repository: UpdateTable()
+Repository -> Service: Return Table / Failure
+
+alt Error updating table
+    Service -> User: Return NotFound (CustomResponse)
+else Success updating table
+    Service -> User: Return Success
+end
+@enduml

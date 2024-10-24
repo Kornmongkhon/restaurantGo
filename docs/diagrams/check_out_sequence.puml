@@ -1,0 +1,21 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+title Check Out Sequence Diagram
+actor User
+participant "RestaurantController" as Controller
+participant "RestaurantService" as Service
+participant "RestaurantRepository" as Repository
+
+User -> Controller: PATCH /api/v1/restaurant/checkout
+Controller -> Service: CheckOut()
+
+Service -> Repository: CheckOut()
+Repository -> Service: Return Success / Failure
+
+alt Error checking out
+    Service -> User: Return Failure
+else Success checking out
+    Service -> User: Return Success
+end
+@enduml

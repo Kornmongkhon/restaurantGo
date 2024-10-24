@@ -57,16 +57,18 @@ func main() {
 	apiV1 := e.Group("/api/v1/restaurant")
 	apiV1.GET("/swagger/*", echoSwagger.WrapHandler)
 	apiV1.GET("/", restaurantController.Home)
-	apiV1.POST("/table", restaurantController.FindTable)
-	apiV1.PATCH("/table/update", restaurantController.UpdateTable)
+	apiV1.POST("/table", restaurantController.FindTable)           //diagram
+	apiV1.PATCH("/table/update", restaurantController.UpdateTable) //diagram
 	apiV1.GET("/all/menu", restaurantController.GetAllMenu)
 	apiV1.POST("/order/menu", restaurantController.OrderMenu)
 	apiV1.PATCH("/order/update", restaurantController.UpdateOrder)
 	apiV1.DELETE("/order/delete", restaurantController.DeleteOrder)
-	apiV1.DELETE("/order/delete/all", restaurantController.DeleteAllOrderWhenCheckOut)
+	apiV1.DELETE("/order/delete/all", restaurantController.DeleteAllOrderWhenCheckOut) //diagram
 	apiV1.POST("/order/pay", restaurantController.PayOrder)
 	apiV1.POST("/order/review", restaurantController.ReviewOrder)
 	apiV1.POST("/order/details", restaurantController.OrderDetails)
-	apiV1.POST("/order/history", restaurantController.OrderHistory)
+	apiV1.POST("/order/history", restaurantController.OrderHistory) //diagram
+	apiV1.POST("/checkin", restaurantController.CheckIn)            //diagram
+	apiV1.PATCH("/checkout", restaurantController.CheckOut)         //diagram
 	e.Logger.Fatal(e.Start(":1323"))
 }
